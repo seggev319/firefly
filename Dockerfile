@@ -6,7 +6,7 @@ COPY . .
 ARG VERSION=dev
 ARG COMMIT=none
 ARG BUILTAT=unknown
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X github.com/seggev/firefly/pkg/version.Version=${VERSION} -X github.com/seggev/firefly/pkg/version.Commit=${COMMIT} -X github.com/seggev/firefly/pkg/version.BuiltAt=${BUILTAT}" -o /firefly ./cmd/firefly
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X github.com/shoresh319/firefly/pkg/version.Version=${VERSION} -X github.com/shoresh319/firefly/pkg/version.Commit=${COMMIT} -X github.com/shoresh319/firefly/pkg/version.BuiltAt=${BUILTAT}" -o /firefly ./cmd/firefly
 
 FROM gcr.io/distroless/base-debian12
 WORKDIR /

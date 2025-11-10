@@ -5,7 +5,7 @@ GO_FILES := $(shell find . -name '*.go' -not -path "./vendor/*")
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILTAT ?= $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
-LDFLAGS := -X github.com/seggev/firefly/pkg/version.Version=$(VERSION) -X github.com/seggev/firefly/pkg/version.Commit=$(COMMIT) -X github.com/seggev/firefly/pkg/version.BuiltAt=$(BUILTAT)
+LDFLAGS := -X github.com/shoresh319/firefly/pkg/version.Version=$(VERSION) -X github.com/shoresh319/firefly/pkg/version.Commit=$(COMMIT) -X github.com/shoresh319/firefly/pkg/version.BuiltAt=$(BUILTAT)
 
 .PHONY: all build run test clean
 
@@ -18,8 +18,6 @@ build: $(GO_FILES)
 	@echo "Built at $(BIN_DIR)/$(APP_NAME)"
 
 run:
-	@PORT?=8080
-	@echo "Running on :$${PORT} ..."
 	@go run -ldflags "$(LDFLAGS)" ./cmd/firefly
 
 test:
