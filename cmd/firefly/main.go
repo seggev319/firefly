@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/shoresh319/firefly/internal/app"
 	"github.com/shoresh319/firefly/pkg/version"
@@ -16,9 +17,13 @@ func main() {
 	ctx := context.Background()
 
 	application := app.New(app.Config{
-		TopWordNum:      10,
-		WordBankPath:    filepath.Join("internal", "assets", "words.txt"),
-		ArticleListPath: filepath.Join("internal", "assets", "endg-urls.txt"),
+		TopWordNum:           10,
+		WordBankPath:         filepath.Join("internal", "assets", "words.txt"),
+		ArticleListPath:      filepath.Join("internal", "assets", "endg-urls.txt"),
+		RetryMax:             10,
+		RetryWaitMin:         10 * time.Second,
+		RetryWaitMax:         5 * time.Minute,
+		ConcurrencyPerDomain: 10,
 	})
 
 	if err := application.Run(ctx, os.Stdout); err != nil {

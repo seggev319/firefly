@@ -20,6 +20,12 @@ type Config struct {
 	TopWordNum      int
 	HTTPClient      *http.Client
 	WorkerCount     int
+	// Retry configuration for HTTP requests
+	RetryMax     int           // Maximum number of retries (default: 3)
+	RetryWaitMin time.Duration // Minimum wait time between retries (default: 1s)
+	RetryWaitMax time.Duration // Maximum wait time between retries (default: 5s)
+	// Concurrency configuration
+	ConcurrencyPerDomain int // Maximum concurrent requests per domain (default: 3)
 }
 
 // App glues together input sources, processors and outputs.
@@ -36,9 +42,29 @@ func New(cfg Config) *App {
 		}
 	}
 
+	// Set default retry configuration if not provided
+	if cfg.RetryMax == 0 {
+		cfg.RetryMax = 3
+	}
+	if cfg.RetryWaitMin == 0 {
+		cfg.RetryWaitMin = 1 * time.Second
+	}
+	if cfg.RetryWaitMax == 0 {
+		cfg.RetryWaitMax = 5 * time.Second
+	}
+	if cfg.ConcurrencyPerDomain == 0 {
+		cfg.ConcurrencyPerDomain = 3
+	}
+
 	return &App{
-		cfg:     cfg,
-		fetcher: articles.NewSource(cfg.HTTPClient),
+		cfg: cfg,
+		fetcher: articles.NewSource(articles.SourceConfig{
+			HTTPClient:           cfg.HTTPClient,
+			RetryMax:             cfg.RetryMax,
+			RetryWaitMin:         cfg.RetryWaitMin,
+			RetryWaitMax:         cfg.RetryWaitMax,
+			ConcurrencyPerDomain: cfg.ConcurrencyPerDomain,
+		}),
 	}
 }
 
