@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/shoresh319/firefly/internal/app"
 	"github.com/shoresh319/firefly/pkg/version"
@@ -14,8 +13,7 @@ import (
 func main() {
 	log.Printf("starting firefly version=%s commit=%s built_at=%s", version.Version, version.Commit, version.BuiltAt)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	ctx := context.Background()
 
 	application := app.New(app.Config{
 		TopWordNum:      10,
