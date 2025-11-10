@@ -1,0 +1,28 @@
+# Binaries
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build artifacts
+/build/
+/dist/
+
+# Coverage and test data
+*.out
+coverage.*
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+
+# Vendor (if used)
+/vendor/
+
+
