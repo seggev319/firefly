@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"sort"
 	"sync"
+	"sync/atomic"
 )
 
 // ArticleFetcher returns the textual content for a given article URL.
@@ -69,6 +70,7 @@ func NewCounter(fetcher ArticleFetcher, validator WordValidator, opts ...Option)
 func (c *Counter) CountTopWords(ctx context.Context, urlCh <-chan string, topN int) (map[string]int, error) {
 	countsCh := make(chan map[string]int, c.workers*2)
 	var wg sync.WaitGroup
+	var successes, failures int64
 
 	for i := 0; i < c.workers; i++ {
 		wg.Add(1)
@@ -82,7 +84,11 @@ func (c *Counter) CountTopWords(ctx context.Context, urlCh <-chan string, topN i
 					if !ok {
 						return
 					}
-					c.processURL(ctx, url, countsCh)
+					if c.processURL(ctx, url, countsCh) {
+						atomic.AddInt64(&successes, 1)
+					} else {
+						atomic.AddInt64(&failures, 1)
+					}
 				}
 			}
 		}()
@@ -103,6 +109,7 @@ func (c *Counter) CountTopWords(ctx context.Context, urlCh <-chan string, topN i
 	close(countsCh)
 	<-doneMerge
 
+	log.Printf("processed articles: %d successes, %d failures", atomic.LoadInt64(&successes), atomic.LoadInt64(&failures))
 	log.Printf("counted %d distinct valid words", len(globalCounts))
 
 	topCounts := pickTop(globalCounts, topN)
@@ -111,14 +118,12 @@ func (c *Counter) CountTopWords(ctx context.Context, urlCh <-chan string, topN i
 	return topCounts, nil
 }
 
-func (c *Counter) processURL(ctx context.Context, url string, countsCh chan<- map[string]int) {
+func (c *Counter) processURL(ctx context.Context, url string, countsCh chan<- map[string]int) bool {
 	text, err := c.fetcher.Fetch(ctx, url)
 	if err != nil {
 		log.Printf("failed to load article %s: %v", url, err)
-		return
+		return false
 	}
-
-	log.Printf("successfully loaded article from %s", url)
 
 	local := make(map[string]int)
 	for _, token := range c.wordRegex.FindAllString(text, -1) {
@@ -128,12 +133,14 @@ func (c *Counter) processURL(ctx context.Context, url string, countsCh chan<- ma
 	}
 
 	if len(local) == 0 {
-		return
+		return true
 	}
 
 	select {
 	case <-ctx.Done():
+		return true
 	case countsCh <- local:
+		return true
 	}
 }
 
